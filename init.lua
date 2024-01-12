@@ -73,8 +73,8 @@ require('lazy').setup({
   'tpope/vim-fugitive',
   'tpope/vim-rhubarb',
 
-  -- Detect tabstop and shiftwidth automatically
-  'tpope/vim-sleuth',
+  -- Detect tabstop and shiftwidth automatically [Disabled]
+  -- 'tpope/vim-sleuth',
 
   -- NOTE: This is where your plugins related to LSP can be installed.
   --  The configuration is done below. Search for lspconfig to find it below.
@@ -312,6 +312,13 @@ vim.o.termguicolors = true
 
 -- Relative line numbering.
 vim.o.relativenumber = true
+
+-- Tabs as spaces [see https://stackoverflow.com/questions/1878974/redefine-tab-as-4-spaces]
+vim.o.shiftwidth = 4
+vim.o.smarttab = true
+vim.o.expandtab = true
+vim.o.tabstop = 8
+vim.o.softtabstop = 0
 
 -- [[ Basic Keymaps ]]
 
