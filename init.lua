@@ -340,6 +340,11 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('i', 'jk', '<esc>')
 vim.keymap.set('i', 'kj', '<esc>')
 
+vim.keymap.set('n', '<C-S>', ':update<cr>', { desc = 'Alternate method of saving file' })
+vim.keymap.set('i', '<C-S>', '<esc>:update<cr>gi', { desc = 'Alternate method of saving file' })
+
+vim.api.nvim_create_user_command('Alex', ':LspRestart<cr>:LspRestart<cr>', { desc = 'Quick Lsp Restart' })
+
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
 local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
