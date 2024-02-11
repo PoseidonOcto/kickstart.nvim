@@ -343,7 +343,10 @@ vim.keymap.set('i', 'kj', '<esc>')
 vim.keymap.set('n', '<C-S>', ':update<cr>', { desc = 'Alternate method of saving file' })
 vim.keymap.set('i', '<C-S>', '<esc>:update<cr>gi', { desc = 'Alternate method of saving file' })
 
-vim.api.nvim_create_user_command('Alex', ':LspRestart<cr>:LspRestart<cr>', { desc = 'Quick Lsp Restart' })
+-- Allows inserting before words in visual block mode, and ensures anything that triggers on 'InsertLeave'
+--  event is run appropriately (important as LSP diagnostics show on 'InsertLeave').
+vim.keymap.set({'i', 'n', 'v'}, '<C-C>', '<esc>', { desc = 'Make Ctrl+C behave exactly like escape.' })
+
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
