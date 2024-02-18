@@ -462,13 +462,14 @@ vim.api.nvim_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<C
 vim.defer_fn(function()
   require('nvim-treesitter.configs').setup {
     -- Add languages to be installed here that you want installed for treesitter
-    ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'yaml', 'vimdoc', 'vim', 'bash', 'haskell'},
+    ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'bash', 'haskell'},
 
     -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
     auto_install = false,
 
     highlight = {
       enable = true,
+      -- Yaml parser doesn't work for some reason. Best lead: "https://www.reddit.com/r/neovim/comments/135f3kw/nvim_treessitter_error_uv_dlopen_on_opening_a_lua/".
       disable = { "yaml" }
     },
     indent = { enable = true },
