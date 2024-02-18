@@ -365,8 +365,22 @@ require('telescope').setup {
   defaults = {
     mappings = {
       i = {
+        ["<C-c>"] = {"<esc>", type = "command"},
         ['<C-u>'] = false,
         ['<C-d>'] = false,
+      },
+      n = {
+        ["<C-c>"] = require('telescope.actions').close,
+        ['<C-u>'] = function(prompt_bufnr)
+          for _ = 1, 8, 1 do
+            require('telescope.actions').move_selection_previous(prompt_bufnr)
+          end
+        end,
+        ['<C-d>'] = function(prompt_bufnr)
+          for _ = 1, 8, 1 do
+            require('telescope.actions').move_selection_next(prompt_bufnr)
+          end
+        end,
       },
     },
   },
@@ -448,12 +462,15 @@ vim.api.nvim_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<C
 vim.defer_fn(function()
   require('nvim-treesitter.configs').setup {
     -- Add languages to be installed here that you want installed for treesitter
-    ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'bash' },
+    ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'yaml', 'vimdoc', 'vim', 'bash', 'haskell'},
 
     -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
     auto_install = false,
 
-    highlight = { enable = true },
+    highlight = {
+      enable = true,
+      disable = { "yaml" }
+    },
     indent = { enable = true },
     incremental_selection = {
       enable = true,
@@ -652,19 +669,19 @@ cmp.setup {
     ['<C-b>'] = cmp.mapping.scroll_docs(-4),
     ['<C-f>'] = cmp.mapping.scroll_docs(4),
     ['<C-Space>'] = cmp.mapping.complete {},
-    ['<CR>'] = cmp.mapping.confirm {
+    ['<Tab>'] = cmp.mapping.confirm {
       behavior = cmp.ConfirmBehavior.Replace,
       select = true,
     },
-    ['<Tab>'] = cmp.mapping(function(fallback)
-      if cmp.visible() then
-        cmp.select_next_item()
-      elseif luasnip.expand_or_locally_jumpable() then
-        luasnip.expand_or_jump()
-      else
-        fallback()
-      end
-    end, { 'i', 's' }),
+    -- ['<Tab>'] = cmp.mapping(function(fallback)
+    --   if cmp.visible() then
+    --     cmp.select_next_item()
+    --   elseif luasnip.expand_or_locally_jumpable() then
+    --     luasnip.expand_or_jump()
+    --   else
+    --     fallback()
+    --   end
+    -- end, { 'i', 's' }),
     ['<S-Tab>'] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_prev_item()
