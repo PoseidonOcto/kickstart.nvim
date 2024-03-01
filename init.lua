@@ -320,6 +320,9 @@ vim.o.expandtab = true
 vim.o.tabstop = 8
 vim.o.softtabstop = 0
 
+-- Prevent scrolloff
+vim.o.scrolloff = 5
+
 -- [[ Basic Keymaps ]]
 
 -- Keymaps for better default experience
