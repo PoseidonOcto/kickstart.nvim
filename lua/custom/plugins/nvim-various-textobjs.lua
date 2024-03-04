@@ -13,7 +13,7 @@ return {
             lookForwardBig = 15,
 
             -- use suggested keymaps (see overview table in README)
-            useDefaultKeymaps = false,
+            useDefaultKeymaps = true,
 
             -- disable only some default keymaps, e.g. { "ai", "ii" }
             disabledKeymaps = {"r"},
