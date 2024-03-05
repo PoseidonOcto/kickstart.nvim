@@ -350,6 +350,9 @@ vim.keymap.set('i', '<C-S>', '<esc>:update<cr>gi', { desc = 'Alternate method of
 --  event is run appropriately (important as LSP diagnostics show on 'InsertLeave').
 vim.keymap.set({'i', 'n', 'v'}, '<C-C>', '<esc>', { desc = 'Make Ctrl+C behave exactly like escape.' })
 
+-- Delete and paste without copying
+vim.keymap.set({'n', 'v'}, '<leader>p', '"_dP', { desc = 'Paste without copying to clipboard.' })
+vim.keymap.set({'n', 'v'}, '<leader>d', '"_d', { desc = 'Delete without copying to clipboard.' })
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
@@ -429,9 +432,9 @@ end
 vim.api.nvim_create_user_command('LiveGrepGitRoot', live_grep_git_root, {})
 
 -- See `:help telescope.builtin`
-vim.keymap.set('n', '<leader>/', require('telescope.builtin').oldfiles, { desc = '[/] Find recently opened files' })
+vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { desc = '[/] Find recently opened files' })
 vim.keymap.set('n', '<leader><space>', require('telescope.builtin').buffers, { desc = '[ ] Find existing buffers' })
-vim.keymap.set('n', '<leader>?', function()
+vim.keymap.set('n', '<leader>/', function()
   -- You can pass additional configuration to telescope to change theme, layout, etc.
   require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
     winblend = 10,
