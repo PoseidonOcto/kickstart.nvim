@@ -321,7 +321,7 @@ vim.o.tabstop = 8
 vim.o.softtabstop = 0
 
 -- Prevent scrolloff
-vim.o.scrolloff = 5
+vim.o.scrolloff = 4
 
 -- [[ Basic Keymaps ]]
 
@@ -659,6 +659,7 @@ mason_lspconfig.setup_handlers {
 local cmp = require 'cmp'
 local luasnip = require 'luasnip'
 require('luasnip.loaders.from_vscode').lazy_load()
+require("luasnip.loaders.from_vscode").load({paths = "./my_snippets"})
 luasnip.config.setup {}
 
 cmp.setup {
