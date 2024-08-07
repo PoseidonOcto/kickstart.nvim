@@ -314,11 +314,15 @@ vim.o.termguicolors = true
 vim.o.relativenumber = true
 
 -- Tabs as spaces [see https://stackoverflow.com/questions/1878974/redefine-tab-as-4-spaces]
-vim.o.shiftwidth = 4
-vim.o.smarttab = true
-vim.o.expandtab = true
-vim.o.tabstop = 8
-vim.o.softtabstop = 0
+-- vim.o.shiftwidth = 4
+-- vim.o.smarttab = true
+-- vim.o.expandtab = true
+-- vim.o.tabstop = 8
+-- vim.o.softtabstop = 0
+
+-- Tabs as tabs (uses default options) 
+vim.o.list = true
+vim.o.listchars = "tab:> ,trail: ,nbsp:+"  -- (disable displaying trailing spaces)
 
 -- Prevent scrolloff
 vim.o.scrolloff = 4
@@ -619,14 +623,14 @@ local servers = {
   -- tsserver = {},
   -- html = { filetypes = { 'html', 'twig', 'hbs'} },
 
-  lua_ls = {
-    Lua = {
-      workspace = { checkThirdParty = false },
-      telemetry = { enable = false },
-      -- NOTE: toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-      -- diagnostics = { disable = { 'missing-fields' } },
-    },
-  },
+  -- lua_ls = {
+  --   Lua = {
+  --     workspace = { checkThirdParty = false },
+  --     telemetry = { enable = false },
+  --     -- NOTE: toggle below to ignore Lua_LS's noisy `missing-fields` warnings
+  --     -- diagnostics = { disable = { 'missing-fields' } },
+  --   },
+  -- },
 }
 
 -- Setup neovim lua configuration
@@ -653,6 +657,8 @@ mason_lspconfig.setup_handlers {
     }
   end,
 }
+
+-- require("lspconfig").clangd.setup({})
 
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
