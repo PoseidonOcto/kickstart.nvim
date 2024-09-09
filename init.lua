@@ -327,6 +327,8 @@ vim.o.listchars = "tab:> ,trail: ,nbsp:+"  -- (disable displaying trailing space
 -- Prevent scrolloff
 vim.o.scrolloff = 4
 
+vim.o.colorcolumn = "81"
+
 -- [[ Basic Keymaps ]]
 
 -- Keymaps for better default experience
