@@ -465,6 +465,11 @@ vim.keymap.set('n', '<leader>sG', ':LiveGrepGitRoot<cr>', { desc = '[S]earch by 
 vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { desc = '[S]earch [D]iagnostics' })
 vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = '[S]earch [R]esume' })
 
+--  COMP3301 Assignment 3 specific binds
+vim.keymap.set('n', '<leader>1', ':e /usr/src/usr.sbin/vhdctl/vhdctl.c<cr>', { desc = 'Open specific file' })
+vim.keymap.set('n', '<leader>2', ':e /usr/src/sys/dev/vhd.c<cr>', { desc = 'Open specific file' })
+vim.keymap.set('n', '<leader>3', ':e /usr/src/sys/dev/vnd.c<cr>', { desc = 'Open specific file' })
+
 -- [[ Display Errors ]]
 vim.api.nvim_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<CR>', { noremap=true, silent=true })
 
