@@ -16,7 +16,7 @@ return {
             useDefaultKeymaps = true,
 
             -- disable only some default keymaps, e.g. { "ai", "ii" }
-            disabledKeymaps = {"r"},
+            disabledKeymaps = {"r", "gc"},
         }
     end
 }
