@@ -105,7 +105,6 @@ vim.g.have_nerd_font = false
 -- vim.o.tabstop = 8
 -- vim.o.softtabstop = 0
 
-
 -- Make line numbers default
 vim.opt.number = true
 -- Relative line numbers
@@ -182,11 +181,11 @@ vim.keymap.set('i', '<C-S>', '<esc>:update<cr>gi', { desc = 'Alternate method of
 
 -- Allows inserting before words in visual block mode, and ensures anything that triggers on 'InsertLeave'
 --  event is run appropriately (important as LSP diagnostics show on 'InsertLeave').
-vim.keymap.set({'i', 'n', 'v'}, '<C-C>', '<esc>', { desc = 'Make Ctrl+C behave exactly like escape.' })
+vim.keymap.set({ 'i', 'n', 'v' }, '<C-C>', '<esc>', { desc = 'Make Ctrl+C behave exactly like escape.' })
 
 -- Delete and paste without copying
-vim.keymap.set({'n', 'v'}, '<leader>p', '"_dP', { desc = 'Paste without copying to clipboard.' })
-vim.keymap.set({'n', 'v'}, '<leader>d', '"_d', { desc = 'Delete without copying to clipboard.' })
+vim.keymap.set({ 'n', 'v' }, '<leader>p', '"_dP', { desc = 'Paste without copying to clipboard.' })
+vim.keymap.set({ 'n', 'v' }, '<leader>d', '"_d', { desc = 'Delete without copying to clipboard.' })
 
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
@@ -204,7 +203,7 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- [[ Display Errors ]]
-vim.api.nvim_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<CR>', { noremap=true, silent=true })
+vim.api.nvim_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<CR>', { noremap = true, silent = true })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -402,13 +401,13 @@ require('lazy').setup({
           mappings = {
             i = {
               ['<c-enter>'] = 'to_fuzzy_refine',
-              ["<C-c>"] = {"<esc>", type = "command"},
+              ['<C-c>'] = { '<esc>', type = 'command' },
               ['<C-u>'] = false,
               ['<C-d>'] = false,
             },
 
             n = {
-              ["<C-c>"] = require('telescope.actions').close,
+              ['<C-c>'] = require('telescope.actions').close,
               ['<C-u>'] = function(prompt_bufnr)
                 for _ = 1, 8, 1 do
                   require('telescope.actions').move_selection_previous(prompt_bufnr)
@@ -444,17 +443,17 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-      vim.keymap.set('n', '<leader>sa', builtin.oldfiles, { desc = '[S]earch Recent Files' })
+      vim.keymap.set('n', '<leader>/', builtin.oldfiles, { desc = '[S]earch Recent Files' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
-      vim.keymap.set('n', '<leader>/', function()
+      vim.keymap.set('n', '<leader>?', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
           winblend = 10,
           previewer = false,
         })
-      end, { desc = '[/] Fuzzily search in current buffer' })
+      end, { desc = '[?] Fuzzily search in current buffer' })
 
       -- It's also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
@@ -937,7 +936,24 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'python', 'tsx', 'javascript', 'typescript', 'haskell'},
+      ensure_installed = {
+        'bash',
+        'c',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'vim',
+        'vimdoc',
+        'python',
+        'tsx',
+        'javascript',
+        'typescript',
+        'haskell',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -1005,7 +1021,7 @@ require('lazy').setup({
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!
