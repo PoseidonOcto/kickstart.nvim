@@ -99,11 +99,11 @@ vim.g.have_nerd_font = false
 --  For more options, you can see `:help option-list`
 
 -- Tabs as spaces [see https://stackoverflow.com/questions/1878974/redefine-tab-as-4-spaces]
--- vim.o.shiftwidth = 4
--- vim.o.smarttab = true
--- vim.o.expandtab = true
--- vim.o.tabstop = 8
--- vim.o.softtabstop = 0
+vim.o.shiftwidth = 4
+vim.o.smarttab = true
+vim.o.expandtab = true
+vim.o.tabstop = 8
+vim.o.softtabstop = 0
 
 -- Make line numbers default
 vim.opt.number = true
@@ -123,6 +123,18 @@ vim.opt.showmode = false
 vim.schedule(function()
   vim.opt.clipboard = 'unnamedplus'
 end)
+
+-- Allow clipboard to sync through WSL.
+if vim.fn.has 'wsl' == 1 then
+  vim.api.nvim_create_autocmd('TextYankPost', {
+
+    group = vim.api.nvim_create_augroup('Yank', { clear = true }),
+
+    callback = function()
+      vim.fn.system('clip.exe', vim.fn.getreg '"')
+    end,
+  })
+end
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -911,14 +923,16 @@ require('lazy').setup({
       --  - va)  - [V]isually select [A]round [)]paren
       --  - yinq - [Y]ank [I]nside [N]ext [Q]uote
       --  - ci'  - [C]hange [I]nside [']quote
-      require('mini.ai').setup { n_lines = 500 }
+      --require('mini.ai').setup { n_lines = 500 }
+      -- NOTE: Above is disabled, but could be a better alternative than what we currently use.
 
       -- Add/delete/replace surroundings (brackets, quotes, etc.)
       --
       -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
-      require('mini.surround').setup()
+      --require('mini.surround').setup()
+      -- NOTE: Above is disabled, but could be a better alternative than what we currently use.
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
