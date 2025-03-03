@@ -124,17 +124,17 @@ vim.schedule(function()
   vim.opt.clipboard = 'unnamedplus'
 end)
 
--- Allow clipboard to sync through WSL.
-if vim.fn.has 'wsl' == 1 then
-  vim.api.nvim_create_autocmd('TextYankPost', {
-
-    group = vim.api.nvim_create_augroup('Yank', { clear = true }),
-
-    callback = function()
-      vim.fn.system('clip.exe', vim.fn.getreg '"')
-    end,
-  })
-end
+vim.g.clipboard = {
+  name = 'win32yank',
+  copy = {
+    ['+'] = 'win32yank.exe -i --crlf',
+    ['*'] = 'win32yank.exe -i --crlf',
+  },
+  paste = {
+    ['+'] = 'win32yank.exe -o --lf',
+    ['*'] = 'win32yank.exe -o --lf',
+  },
+}
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -213,6 +213,8 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+
+vim.api.nvim_create_user_command('Dos', ':%s/\r//g', {})
 
 -- [[ Display Errors ]]
 vim.api.nvim_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<CR>', { noremap = true, silent = true })
