@@ -102,7 +102,7 @@ vim.g.have_nerd_font = false
 vim.o.shiftwidth = 4
 vim.o.smarttab = true
 vim.o.expandtab = true
-vim.o.tabstop = 8
+vim.o.tabstop = 4
 vim.o.softtabstop = 0
 
 -- Make line numbers default
@@ -175,6 +175,24 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 4
 
+-- Allows going past the end of a line (i.e. where there is no whitespace) in block-editing mode.
+vim.opt.virtualedit = 'block'
+
+-- Disable comment continuation on 'o'. Has to be done repeatedly otherwise
+-- neovim will overwrite it at some point.
+vim.api.nvim_create_autocmd('BufWinEnter', {
+  command = 'set formatoptions-=ro',
+})
+
+-- Disable automatic indenting in Haskell (indenting any expression below
+-- a where clause will attempt to indent that expression
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'haskell',
+  callback = function()
+    vim.opt_local.indentexpr = ''
+  end,
+})
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -214,7 +232,104 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
+-- Subsitute word under cursor
+vim.keymap.set('n', '<leader>rw', [[:%s/<C-r><C-w>/<C-r><C-w>/g<Left><Left>]], { desc = '[R]ename [w]ord under cursor' })
+
+-- Delete a single space to the left of the caret in insert mode.
+-- Helps as sometimes you don't want to delete to the next 'shiftwidth'
+vim.keymap.set('i', '<M-BS>', '<Left><Del>')
+
+vim.keymap.set('n', '<leader>zz', function()
+  for _, client in ipairs(vim.lsp.get_clients { name = 'hls' }) do
+    print 'foobar'
+    local new_settings = {
+      haskell = {
+        formattingProvider = 'stylish-haskell',
+        plugin = {
+          hlint = {
+            codeActionsOn = false,
+          },
+          ['ghcide-completions'] = {
+            config = {
+              autoExtendOn = false,
+            },
+          },
+        },
+      },
+    }
+    client.config.settings = new_settings
+
+    client.notify('workspace/didChangeConfiguration', {
+      settings = new_settings,
+    })
+  end
+end)
+
+-- Open current file in windows explorer
+vim.api.nvim_create_user_command('Wex', function()
+  -- Get WSL Path: https://superuser.com/questions/1338991/how-to-open-windows-explorer-from-current-working-directory-of-wsl-shell
+  -- Get filename: https://vimdoc.sourceforge.net/htmldoc/cmdline.html#filename-modifiers
+  local path = vim.fn.system('wslpath -a -w "' .. vim.fn.expand '%:p' .. '"')
+
+  -- Add SINGLE quotes around message. Don't ask why it has to be single quotes. IDK.
+  -- The vim.fn.escape can be removed - it's just there for ease of adding an escape if something comes up.
+  local escapedPath = "'" .. vim.fn.escape(path, '') .. "'"
+  escapedPath = escapedPath:gsub('\n', '') -- Removes the newline added by the 'system' call.
+
+  -- Open in explorer: https://ss64.com/nt/explorer.html
+  vim.fn.system('explorer.exe /select, ' .. escapedPath)
+end, { desc = 'Open current directory in [W]indows [ex]plorer.' })
+
+-- Copy current file's directory to clipboard
+vim.api.nvim_create_user_command('Cwd', function()
+  -- Get current directory: https://vimdoc.sourceforge.net/htmldoc/cmdline.html#filename-modifiers
+  local directoryPath = "'" .. vim.fn.expand '%:p:h' .. "'"
+
+  -- Copy to clipboard
+  vim.fn.system('echo ' .. directoryPath .. ' | win32yank.exe -i --crlf')
+end, { desc = '[C]opy the current [w]orking [d]irectory (file directory) to clipboard' })
+
+-- Output number of warnings
+vim.api.nvim_create_user_command('Warnings', function()
+  local errors = vim.diagnostic.get(0, { severity = vim.diagnostic.severity.ERROR })
+  local warnings = vim.diagnostic.get(0, { severity = vim.diagnostic.severity.WARN })
+  local total = #errors + #warnings
+  vim.notify('Total Errors + Warnings: ' .. total)
+end, { desc = 'Show total errors and [Warnings]' })
+
 vim.api.nvim_create_user_command('Dos', ':%s/\r//g', {})
+
+-- Testing code. Can be removed.
+vim.api.nvim_create_user_command('Test', function()
+  vim.api.nvim_set_hl(0, 'Normal', { bg = '#1e1e2e' })
+  vim.api.nvim_set_hl(0, 'NormalFloat', { bg = '#1e1e2e' })
+  vim.api.nvim_set_hl(0, 'TelescopeNormal', { bg = '#1e1e2e' })
+  vim.api.nvim_set_hl(0, 'TelescopeBorder', { bg = '#1e1e2e' })
+  vim.api.nvim_set_hl(0, 'TelescopePromptNormal', { bg = '#1e1e2e' })
+  vim.api.nvim_set_hl(0, 'TelescopePromptBorder', { bg = '#1e1e2e' })
+  vim.api.nvim_set_hl(0, 'TelescopeResultsNormal', { bg = '#1e1e2e' })
+  vim.api.nvim_set_hl(0, 'TelescopeResultsBorder', { bg = '#1e1e2e' })
+  vim.api.nvim_set_hl(0, 'TelescopePreviewNormal', { bg = '#1e1e2e' })
+  vim.api.nvim_set_hl(0, 'TelescopePreviewBorder', { bg = '#1e1e2e' })
+end, {})
+
+-- vim.api.nvim_create_user_command('DisableHighlights', function()
+--   for _, client in ipairs(vim.lsp.get_clients { name = 'hls' }) do
+--     client.notify('workspace/didChangeConfiguration', {
+--       settings = {
+--         haskell = {
+--           plugin = {
+--             hlint = {
+--               codeActionsOn = false,
+--             },
+--           },
+--           -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
+--           -- diagnostics = { disable = { 'missing-fields' } },
+--         },
+--       },
+--     })
+--   end
+-- end, {})
 
 -- [[ Display Errors ]]
 vim.api.nvim_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<CR>', { noremap = true, silent = true })
@@ -464,7 +579,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>?', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-          winblend = 10,
+          winblend = 0,
           previewer = false,
         })
       end, { desc = '[?] Fuzzily search in current buffer' })
@@ -563,6 +678,10 @@ require('lazy').setup({
           --  To jump back, press <C-t>.
           map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
 
+          -- WARN: This is not Goto Definition, this is Goto Declaration.
+          --  For example, in C this would take you to the header.
+          map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+
           -- Find references for the word under your cursor.
           map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
 
@@ -590,10 +709,6 @@ require('lazy').setup({
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
           map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction', { 'n', 'x' })
-
-          -- WARN: This is not Goto Definition, this is Goto Declaration.
-          --  For example, in C this would take you to the header.
-          map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
           -- See documentation
           map('K', vim.lsp.buf.hover, 'Hover Documentation')
@@ -670,12 +785,26 @@ require('lazy').setup({
         clangd = {
           -- This setting is machine specific. Don't push this to git.
           cmd = { '/home/alex/.local/share/nvim/mason/bin/clangd', '--enable-config' },
-          --  settings = {
-          --   clangd = {
-          --     fallbackFlags = { '-I/usr/include' },
-          --   },
-          -- },
         },
+
+        hls = {
+          settings = {
+            haskell = {
+              formattingProvider = 'stylish-haskell',
+              plugin = {
+                hlint = {
+                  codeActionsOn = false,
+                },
+                ['ghcide-completions'] = {
+                  config = {
+                    autoExtendOn = true,
+                  },
+                },
+              },
+            },
+          },
+        },
+
         -- clangd = {},
         -- gopls = {},
         -- pyright = {},
@@ -690,16 +819,11 @@ require('lazy').setup({
         --
 
         lua_ls = {
-          -- cmd = {...},
-          -- filetypes = { ...},
-          -- capabilities = {},
           settings = {
             Lua = {
               completion = {
                 callSnippet = 'Replace',
               },
-              -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-              -- diagnostics = { disable = { 'missing-fields' } },
             },
           },
         },
@@ -756,7 +880,7 @@ require('lazy').setup({
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
+        local disable_filetypes = { c = true, cpp = true, haskell = true }
         local lsp_format_opt
         if disable_filetypes[vim.bo[bufnr].filetype] then
           lsp_format_opt = 'never'
@@ -846,7 +970,8 @@ require('lazy').setup({
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
+          ['<C-k>'] = cmp.mapping.confirm { select = true },
+          -- ['<C-K>'] = cmp.mapping.confirm { behaviour = cmp.ConfirmBehavior.Replace, select = true },
 
           -- If you prefer more traditional completion keymaps,
           -- you can uncomment the following lines
@@ -991,7 +1116,7 @@ require('lazy').setup({
         -- Yaml parser doesn't work for some reason. Best lead: "https://www.reddit.com/r/neovim/comments/135f3kw/nvim_treessitter_error_uv_dlopen_on_opening_a_lua/".
         -- disable = { "yaml" }
       },
-      indent = { enable = true, disable = { 'ruby' } },
+      indent = { enable = true, disable = { 'ruby', 'haskell' } },
 
       incremental_selection = {
         enable = true,
