@@ -250,14 +250,10 @@ vim.keymap.set('i', '<M-BS>', '<Left><Del>')
 
 vim.keymap.set('n', '<leader>zz', function()
   for _, client in ipairs(vim.lsp.get_clients { name = 'hls' }) do
-    print 'foobar'
+    -- Disables auto-imports
     local new_settings = {
       haskell = {
-        formattingProvider = 'stylish-haskell',
         plugin = {
-          hlint = {
-            codeActionsOn = false,
-          },
           ['ghcide-completions'] = {
             config = {
               autoExtendOn = false,
@@ -266,8 +262,9 @@ vim.keymap.set('n', '<leader>zz', function()
         },
       },
     }
-    client.config.settings = new_settings
 
+    -- Update settings in client and notify client settings have to be updated (have to do both)
+    client.settings = new_settings
     client.notify('workspace/didChangeConfiguration', {
       settings = new_settings,
     })
@@ -321,24 +318,6 @@ vim.api.nvim_create_user_command('Test', function()
   vim.api.nvim_set_hl(0, 'TelescopePreviewNormal', { bg = '#1e1e2e' })
   vim.api.nvim_set_hl(0, 'TelescopePreviewBorder', { bg = '#1e1e2e' })
 end, {})
-
--- vim.api.nvim_create_user_command('DisableHighlights', function()
---   for _, client in ipairs(vim.lsp.get_clients { name = 'hls' }) do
---     client.notify('workspace/didChangeConfiguration', {
---       settings = {
---         haskell = {
---           plugin = {
---             hlint = {
---               codeActionsOn = false,
---             },
---           },
---           -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
---           -- diagnostics = { disable = { 'missing-fields' } },
---         },
---       },
---     })
---   end
--- end, {})
 
 -- [[ Display Errors ]]
 vim.api.nvim_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<CR>', { noremap = true, silent = true })
@@ -758,8 +737,8 @@ require('lazy').setup({
           -- See documentation
           map('K', vim.lsp.buf.hover, 'Hover Documentation')
           map('<C-k>', vim.lsp.buf.signature_help, 'Signature Documentation')
-	  
-	  -- TODO Can this be removed?
+
+          -- TODO Can this be removed?
           -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
           ---@param client vim.lsp.Client
           ---@param method vim.lsp.protocol.Method
@@ -874,7 +853,7 @@ require('lazy').setup({
                 },
                 ['ghcide-completions'] = {
                   config = {
-                    autoExtendOn = true,
+                    autoExtendOn = false,
                   },
                 },
               },
@@ -1043,15 +1022,18 @@ require('lazy').setup({
         -- See :h blink-cmp-config-keymap for defining your own keymap
         preset = 'default',
 
+        ['<C-k>'] = { 'select_and_accept' },
+        -- ['<C-i>'] = {
+        --   function(cmp)
+        --     print 'fooBAR'
+        --   end,
+        --   'select_and_accept',
+        -- },
+
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
       },
 
-          -- Accept ([y]es) the completion.
-          --  This will auto-import if your LSP supports it.
-          --  This will expand snippets if the LSP sent a snippet.
-          ['<C-k>'] = cmp.mapping.confirm { select = true },
-          -- ['<C-K>'] = cmp.mapping.confirm { behaviour = cmp.ConfirmBehavior.Replace, select = true },
       appearance = {
         -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
         -- Adjusts spacing to ensure icons are aligned
