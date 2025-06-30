@@ -853,7 +853,7 @@ require('lazy').setup({
                 },
                 ['ghcide-completions'] = {
                   config = {
-                    autoExtendOn = false,
+                    autoExtendOn = true,
                   },
                 },
               },
