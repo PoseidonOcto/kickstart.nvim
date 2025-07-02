@@ -553,6 +553,7 @@ require('lazy').setup({
               end,
             },
           },
+          path_display = { 'truncate' },
         },
         -- pickers = {}
         extensions = {
@@ -853,7 +854,7 @@ require('lazy').setup({
                 },
                 ['ghcide-completions'] = {
                   config = {
-                    autoExtendOn = true,
+                    autoExtendOn = false,
                   },
                 },
               },
@@ -1023,12 +1024,6 @@ require('lazy').setup({
         preset = 'default',
 
         ['<C-k>'] = { 'select_and_accept' },
-        -- ['<C-i>'] = {
-        --   function(cmp)
-        --     print 'fooBAR'
-        --   end,
-        --   'select_and_accept',
-        -- },
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
