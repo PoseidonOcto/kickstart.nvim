@@ -578,11 +578,91 @@ require('lazy').setup({
             vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
             vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
             --[[ To reset oldfiles:
-        :let v:oldfiles = []
-        :wshada!
-      ]]
-            vim.keymap.set('n', '<leader>/', builtin.oldfiles, { desc = '[S]earch Recent Files' })
+              :let v:oldfiles = []
+              :wshada!
+            ]]
+            -- vim.keymap.set('n', '<leader>/', builtin.oldfiles, { desc = '[S]earch Recent Files' })
             vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+
+            local function right_aligned_oldfiles()
+                -- Display a single element per line - the filepath.
+                local displayer = require('telescope.pickers.entry_display').create {
+                    separator = ' ',
+                    -- Only one element, and it takes up the whole space (the remaining space)
+                    items = {
+                        { remaining = true },
+                    },
+                }
+
+                -- Reverse a list
+                local function reverse(t)
+                    local new = {}
+                    for i = #t, 1, -1 do
+                        new[#new + 1] = t[i]
+                    end
+                    return new
+                end
+
+                -- Returns a list with each entry as a string representing a UTF character.
+                local function utfChars(str)
+                    local chars = {}
+                    for c in string.gmatch(str, '[%z\1-\127\194-\244][\128-\191]*') do
+                        table.insert(chars, c)
+                    end
+                    return chars
+                end
+
+                -- Truncate a string to a certain display width, left padding it with spaces.
+                local function truncate_and_pad_by_display_width(str, maxWidth)
+                    local truncated = ''
+                    for _, c in ipairs(reverse(utfChars(str))) do
+                        local charWidth = vim.fn.strdisplaywidth(c)
+                        if vim.fn.strdisplaywidth(truncated) + charWidth > maxWidth then
+                            break
+                        end
+                        truncated = c .. truncated
+                    end
+
+                    if vim.fn.strdisplaywidth(truncated) < maxWidth then
+                        local padding = maxWidth - vim.fn.strdisplaywidth(truncated)
+                        truncated = string.rep(' ', padding) .. truncated
+                    end
+
+                    return truncated
+                end
+
+                -- Take an entry and display it.
+                local function make_display(entry)
+                    local maxLen = vim.api.nvim_win_get_width(0) - 4
+                    return displayer { truncate_and_pad_by_display_width(entry.value, maxLen) }
+                end
+
+                -- Files to display. Filters out files that aren't real disk files (like meta buffers)
+                local files = vim.tbl_filter(function(path)
+                    return vim.loop.fs_stat(path) ~= nil
+                end, vim.v.oldfiles)
+
+                require('telescope.pickers')
+                    .new({}, {
+                        prompt_title = 'Right Aligned Oldfiles',
+                        finder = require('telescope.finders').new_table {
+                            results = files,
+                            entry_maker = function(entry)
+                                -- Change path to use current working directory if possible.
+                                entry = vim.fn.fnamemodify(entry, ':~:.')
+                                return {
+                                    value = entry,
+                                    display = make_display,
+                                    ordinal = entry,
+                                }
+                            end,
+                        },
+                        sorter = require('telescope.config').values.generic_sorter {},
+                        previewer = require('telescope.previewers').vim_buffer_cat.new {},
+                    })
+                    :find()
+            end
+            vim.keymap.set('n', '<leader>/', right_aligned_oldfiles, { desc = 'Search Recent Files' })
 
             -- Slightly advanced example of overriding default behavior and theme
             vim.keymap.set('n', '<leader>?', function()
