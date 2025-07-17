@@ -370,7 +370,11 @@ rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
     -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
-    'NMAC427/guess-indent.nvim', -- Detect tabstop and shiftwidth automatically
+    -- Detect tabstop and shiftwidth automatically
+    {
+        'NMAC427/guess-indent.nvim',
+        opts = {},
+    },
 
     -- NOTE: Plugins can also be added by using a table,
     -- with the first argument being the link and the following
@@ -581,7 +585,7 @@ require('lazy').setup({
               :let v:oldfiles = []
               :wshada!
             ]]
-            -- vim.keymap.set('n', '<leader>/', builtin.oldfiles, { desc = '[S]earch Recent Files' })
+            vim.keymap.set('n', '<leader>/', builtin.oldfiles, { desc = '[S]earch Recent Files' })
             vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
             local function right_aligned_oldfiles()
@@ -662,7 +666,7 @@ require('lazy').setup({
                     })
                     :find()
             end
-            vim.keymap.set('n', '<leader>/', right_aligned_oldfiles, { desc = 'Search Recent Files' })
+            --vim.keymap.set('n', '<leader>/', right_aligned_oldfiles, { desc = 'Search Recent Files' })
 
             -- Slightly advanced example of overriding default behavior and theme
             vim.keymap.set('n', '<leader>?', function()
@@ -819,6 +823,10 @@ require('lazy').setup({
                     -- or a suggestion from your LSP for this to activate.
                     map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction', { 'n', 'x' })
 
+                    -- Similar to a code action. For an example, see hls-eval-plugin.
+                    map('<leader>clr', vim.lsp.codelens.run, '[C]ode [L]ens [R]un', { 'n', 'x' })
+                    map('<leader>clu', vim.lsp.codelens.refresh, '[C]ode [L]ens [U]pdate', { 'n', 'x' })
+
                     -- See documentation
                     map('K', vim.lsp.buf.hover, 'Hover Documentation')
                     map('<C-k>', vim.lsp.buf.signature_help, 'Signature Documentation')
@@ -922,13 +930,32 @@ require('lazy').setup({
             --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
             --  - settings (table): Override the default settings passed when initializing the server.
             --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
-            local servers = {
+            --
+            -- See `:help lspconfig-all` for a list of all the pre-configured LSPs
+            --
+            -- Although for many setups an LSP will be just fine, some languages (like typescript) have
+            -- entire language plugins that can be useful:
+            --
+            --      https://github.com/pmizio/typescript-tools.nvim
+            local mason_servers = {
+                lua_ls = {
+                    settings = {
+                        Lua = {
+                            completion = {
+                                callSnippet = 'Replace',
+                            },
+                        },
+                    },
+                },
+            }
+
+            local manual_servers = {
                 clangd = {
                     -- This setting is machine specific. Don't push this to git.
                     cmd = { '/home/alex/.local/share/nvim/mason/bin/clangd', '--enable-config' },
                 },
-
                 hls = {
+                    cmd = { 'haskell-language-server-wrapper', '--lsp' },
                     settings = {
                         haskell = {
                             formattingProvider = 'stylish-haskell',
@@ -941,40 +968,44 @@ require('lazy').setup({
                                         autoExtendOn = false,
                                     },
                                 },
-                            },
-                        },
-                    },
-                },
-
-                -- clangd = {},
-                -- gopls = {},
-                -- pyright = {},
-                -- rust_analyzer = {},
-                -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
-                --
-                -- Some languages (like typescript) have entire language plugins that can be useful:
-                --    https://github.com/pmizio/typescript-tools.nvim
-                --
-                -- But for many setups, the LSP (`ts_ls`) will work just fine
-                -- ts_ls = {},
-                --
-
-                lua_ls = {
-                    settings = {
-                        Lua = {
-                            completion = {
-                                callSnippet = 'Replace',
+                                eval = {
+                                    globalOn = true,
+                                    codeLens = true,
+                                },
+                                rename = {
+                                    config = {
+                                        crossModule = true,
+                                    },
+                                },
                             },
                         },
                     },
                 },
             }
 
-            -- Ensure the servers and tools above are installed
+            local function setup_server(server_name, server_config)
+                -- if servers[server_name] is empty, then we are just using default parameters.
+                local server = server_config
+                -- This handles overriding only values explicitly passed
+                -- by the server configuration above. Useful when disabling
+                -- certain features of an LSP (for example, turning off formatting for ts_ls)
+                server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+                require('lspconfig')[server_name].setup(server)
+            end
+
+            -- Setup manual servers
+            for server_name, server_config in pairs(manual_servers) do
+                setup_server(server_name, server_config)
+            end
+
+            -- To ensure the servers and tools above are installed, add
+            --
+            --      ensure_installed = vim.tbl_keys(servers or {})
             --
             -- To check the current status of installed tools and/or manually install
             -- other tools, you can run
-            --    :Mason
+            --
+            --      :Mason
             --
             -- You can press `g?` for help in this menu.
             --
@@ -983,23 +1014,20 @@ require('lazy').setup({
             --
             -- You can add other tools here that you want Mason to install
             -- for you, so that they are available from within Neovim.
-            local ensure_installed = vim.tbl_keys(servers or {})
+            local ensure_installed = vim.tbl_keys(mason_servers or {})
             vim.list_extend(ensure_installed, {
                 'stylua', -- Used to format Lua code
             })
             require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
+            -- Setup any servers that are not in the 'servers' list including servers that may
+            -- have been installed through Mason's GUI or servers that are in 'ensure_installed'
             require('mason-lspconfig').setup {
                 ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
                 automatic_installation = false,
                 handlers = {
                     function(server_name)
-                        local server = servers[server_name] or {}
-                        -- This handles overriding only values explicitly passed
-                        -- by the server configuration above. Useful when disabling
-                        -- certain features of an LSP (for example, turning off formatting for ts_ls)
-                        server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-                        require('lspconfig')[server_name].setup(server)
+                        setup_server(server_name, mason_servers[server_name] or {})
                     end,
                 },
             }
@@ -1240,7 +1268,6 @@ require('lazy').setup({
                 'tsx',
                 'javascript',
                 'typescript',
-                'haskell',
             },
             -- Autoinstall languages that are not installed
             auto_install = true,
@@ -1337,5 +1364,4 @@ require('lazy').setup({
     },
 })
 
--- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
+-- For modeline options, see `:help modeline`
