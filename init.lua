@@ -153,7 +153,7 @@ vim.o.signcolumn = 'yes'
 vim.o.updatetime = 250
 
 -- Decrease mapped sequence wait time
-vim.o.timeoutlen = 300
+vim.o.timeoutlen = 1000
 
 -- Configure how new splits should be opened
 vim.o.splitright = true
@@ -224,7 +224,8 @@ vim.keymap.set({ 'i', 'n', 'v' }, '<C-C>', '<esc>', { desc = 'Make Ctrl+C behave
 
 -- Delete and paste without copying
 vim.keymap.set({ 'n', 'v' }, '<leader>p', '"_dP', { desc = 'Paste without copying to clipboard.' })
-vim.keymap.set({ 'n', 'v' }, '<leader>d', '"_d', { desc = 'Delete without copying to clipboard.' })
+-- DEPRECATED: <leader>d is taken.
+-- vim.keymap.set({ 'n', 'v' }, '<leader>d', '"_d', { desc = 'Delete without copying to clipboard.' })
 
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
@@ -270,6 +271,74 @@ vim.keymap.set('n', '<leader>zz', function()
         })
     end
 end)
+
+--[[ Java specific keymaps (these can be done in the ftplugin directory instead if you prefer) ]]
+-- stylua: ignore start
+vim.keymap.set('n', '<leader>go', function()
+    if vim.bo.filetype == 'java' then
+        require('jdtls').organize_imports()
+    end
+end,                                              { desc = 'Organise imports [Is this useful?]' })
+
+vim.keymap.set('n', '<leader>gu', function()
+    if vim.bo.filetype == 'java' then
+        require('jdtls').update_projects_config()
+    end
+end,                                              { desc = 'Update projects config [Is this useful?]' })
+
+vim.keymap.set('n', '<leader>tc', function()
+    if vim.bo.filetype == 'java' then
+        require('jdtls').test_class()
+    end
+end,                                              { desc = '[T]est [C]lass' })
+
+vim.keymap.set('n', '<leader>tm', function()
+    if vim.bo.filetype == 'java' then
+        require('jdtls').test_nearest_method()
+    end
+end,                                              { desc = '[T]est [M]ethod' })
+-- stylua: ignore end
+
+--[[ Debugging Keymaps ]]
+-- stylua: ignore start
+vim.keymap.set('n', '<leader>bb', "<cmd>lua require'dap'.toggle_breakpoint()<cr>", { desc = '[B]reakpoint: Toggle [B]reakpoint' })
+vim.keymap.set(
+    'n', '<leader>bc', "<cmd>lua require'dap'.set_breakpoint(vim.fn.input('Breakpoint condition: '))<cr>",
+                                                                                   { desc = '[B]reakpoint: Toggle [C]onditional Breakpoint' })
+vim.keymap.set(
+    'n', '<leader>bl', "<cmd>lua require'dap'.set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<cr>",
+                                                                                   { desc = '[B]reakpoint: Toggle [L]og Breakpoint' }
+)
+vim.keymap.set('n', '<leader>br', "<cmd>lua require'dap'.clear_breakpoints()<cr>", { desc = '[B]reakpoint: [C]lear all' })
+vim.keymap.set('n', '<leader>ba', '<cmd>Telescope dap list_breakpoints<cr>',       { desc = '[B]reakpoint: List [A]ll' })
+vim.keymap.set('n', '<leader>dc', "<cmd>lua require'dap'.continue()<cr>",          { desc = '[D]ebug: [C]ontinue' })
+vim.keymap.set('n', '<leader>dj', "<cmd>lua require'dap'.step_over()<cr>",         { desc = '[D]ebug: (go down a line [J])' })
+vim.keymap.set('n', '<leader>dk', "<cmd>lua require'dap'.step_into()<cr>",         { desc = '[D]ebug: (go up into a function [K])' })
+vim.keymap.set('n', '<leader>do', "<cmd>lua require'dap'.step_out()<cr>",          { desc = '[D]ebug: Step [O]ut' })
+vim.keymap.set('n', '<leader>dd', function()
+    require('dap').disconnect()
+    require('dapui').close()
+end,                                                                               { desc = '[D]ebug: [D]isconnect' })
+vim.keymap.set('n', '<leader>dt', function()
+    require('dap').terminate()
+    require('dapui').close()
+end,                                                                               { desc = '[D]ebug: [T]erminate' })
+vim.keymap.set('n', '<leader>dr', "<cmd>lua require'dap'.repl.toggle()<cr>",       { desc = '[D]ebug: [R]epl' })
+vim.keymap.set('n', '<leader>dl', "<cmd>lua require'dap'.run_last()<cr>",          { desc = '[D]ebug: Run [L]ast' })
+vim.keymap.set('n', '<leader>di', function()
+    require('dap.ui.widgets').hover()
+end,                                                                               { desc = '[D]ebug: User [I]nterface' })
+vim.keymap.set('n', '<leader>d?', function()
+    local widgets = require 'dap.ui.widgets'
+    widgets.centered_float(widgets.scopes)
+end,                                                                               { desc = '[D]ebug: ???' })
+vim.keymap.set('n', '<leader>df', '<cmd>Telescope dap frames<cr>',                 { desc = '[D]ebug: [F]rames' })
+vim.keymap.set('n', '<leader>dh', '<cmd>Telescope dap commands<cr>',               { desc = '[D]ebug: [H]elp' })
+vim.keymap.set('n', '<leader>de', function()
+    require('telescope.builtin').diagnostics { default_text = ':E:' }
+end,                                                                               { desc = '[D]ebug: [E]rrors' })
+
+-- stylua: ignore end
 
 -- Open current file in windows explorer
 vim.api.nvim_create_user_command('Wex', function()
@@ -374,6 +443,25 @@ require('lazy').setup({
     {
         'NMAC427/guess-indent.nvim',
         opts = {},
+    },
+    {
+        'chrisgrieser/nvim-spider',
+        lazy = true,
+    },
+    {
+        -- If not working, check dependencies are all installed.
+        'danielfalk/smart-open.nvim',
+        branch = '0.2.x',
+        config = function()
+            require('telescope').load_extension 'smart_open'
+        end,
+        dependencies = {
+            'kkharji/sqlite.lua',
+            -- Only required if using match_algorithm fzf
+            { 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
+            -- Optional.  If installed, native fzy will be used when match_algorithm is fzy
+            { 'nvim-telescope/telescope-fzy-native.nvim' },
+        },
     },
 
     -- NOTE: Plugins can also be added by using a table,
@@ -557,7 +645,8 @@ require('lazy').setup({
                             end,
                         },
                     },
-                    path_display = { 'truncate' },
+                    -- See  :help telescope  and  /path_display  to see options.
+                    path_display = { 'smart' },
                 },
                 -- pickers = {}
                 extensions = {
@@ -585,7 +674,9 @@ require('lazy').setup({
               :let v:oldfiles = []
               :wshada!
             ]]
-            vim.keymap.set('n', '<leader>/', builtin.oldfiles, { desc = '[S]earch Recent Files' })
+            --vim.keymap.set('n', '<leader>/', builtin.oldfiles, { desc = '[S]earch Recent Files' })
+            -- test
+            vim.keymap.set('n', '<leader>/', require('telescope').extensions.smart_open.smart_open, { desc = '[S]earch Recent Files' })
             vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
             local function right_aligned_oldfiles()
@@ -921,9 +1012,7 @@ require('lazy').setup({
             --  So, we create new capabilities with blink.cmp, and then broadcast that to the servers.
             local capabilities = require('blink.cmp').get_lsp_capabilities()
 
-            -- Enable the following language servers
-            --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
-            --
+            --[[ Server Configuration ]]
             --  Add any additional override configuration in the following tables. Available keys are:
             --  - cmd (table): Override the default command used to start the server
             --  - filetypes (table): Override the default list of associated filetypes for the server
@@ -937,6 +1026,8 @@ require('lazy').setup({
             -- entire language plugins that can be useful:
             --
             --      https://github.com/pmizio/typescript-tools.nvim
+
+            -- Servers who are automatically installed through Mason.
             local mason_servers = {
                 lua_ls = {
                     settings = {
@@ -947,13 +1038,19 @@ require('lazy').setup({
                         },
                     },
                 },
+                jdtls = {},
             }
 
+            -- Servers who should not be installed through mason for some reason.
             local manual_servers = {
                 clangd = {
                     -- This setting is machine specific. Don't push this to git.
                     cmd = { '/home/alex/.local/share/nvim/mason/bin/clangd', '--enable-config' },
                 },
+
+                -- Don't install HLS manually as we will want a specific version anyway,
+                -- so installing whatever version Mason installs becomes redundant.
+                -- To install HLS, see `ghcup tui`. Consider trying UQ's VPN if download is slow.
                 hls = {
                     cmd = { 'haskell-language-server-wrapper', '--lsp' },
                     settings = {
@@ -983,8 +1080,18 @@ require('lazy').setup({
                 },
             }
 
+            --[[ Auto install servers / tools through Mason ]]
+            -- Type `:Mason` to install servers / tools, or add the server / tool to `ensure_installed`
+            local ensure_installed = vim.tbl_keys(mason_servers or {})
+            vim.list_extend(ensure_installed, {
+                'stylua', -- Used to format Lua code
+                'java-debug-adapter',
+                'java-test',
+            })
+            require('mason-tool-installer').setup { ensure_installed = ensure_installed }
+
+            --[[ Setup Servers ]]
             local function setup_server(server_name, server_config)
-                -- if servers[server_name] is empty, then we are just using default parameters.
                 local server = server_config
                 -- This handles overriding only values explicitly passed
                 -- by the server configuration above. Useful when disabling
@@ -998,35 +1105,19 @@ require('lazy').setup({
                 setup_server(server_name, server_config)
             end
 
-            -- To ensure the servers and tools above are installed, add
-            --
-            --      ensure_installed = vim.tbl_keys(servers or {})
-            --
-            -- To check the current status of installed tools and/or manually install
-            -- other tools, you can run
-            --
-            --      :Mason
-            --
-            -- You can press `g?` for help in this menu.
-            --
-            -- `mason` had to be setup earlier: to configure its options see the
-            -- `dependencies` table for `nvim-lspconfig` above.
-            --
-            -- You can add other tools here that you want Mason to install
-            -- for you, so that they are available from within Neovim.
-            local ensure_installed = vim.tbl_keys(mason_servers or {})
-            vim.list_extend(ensure_installed, {
-                'stylua', -- Used to format Lua code
-            })
-            require('mason-tool-installer').setup { ensure_installed = ensure_installed }
-
-            -- Setup any servers that are not in the 'servers' list including servers that may
-            -- have been installed through Mason's GUI or servers that are in 'ensure_installed'
+            -- Setup automatically installed servers.
             require('mason-lspconfig').setup {
                 ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
                 automatic_installation = false,
                 handlers = {
                     function(server_name)
+                        -- While jdtls may be installed through Mason, it needs a manual setup.
+                        -- This manual setup occurs in ftplugin/java.lua
+                        if server_name == 'jdtls' then
+                            return
+                        end
+
+                        -- Setup server
                         setup_server(server_name, mason_servers[server_name] or {})
                     end,
                 },
@@ -1282,7 +1373,6 @@ require('lazy').setup({
                 -- disable = { "yaml" }
             },
             indent = { enable = true, disable = { 'ruby', 'haskell' } },
-
             incremental_selection = {
                 enable = true,
                 keymaps = {
@@ -1314,6 +1404,15 @@ require('lazy').setup({
         --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
         --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
         --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+    },
+    {
+        'nvim-treesitter/nvim-treesitter-context',
+        config = function()
+            require('treesitter-context').setup {
+                enable = true,
+                mode = 'cursor',
+            }
+        end,
     },
 
     -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
